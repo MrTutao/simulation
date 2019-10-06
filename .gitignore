@@ -1,6 +1,23 @@
 # Compiled class file
 *.class
 
+#idea
+.idea
+*.iml
+
+#maven
+target
+reports
+
+#local file
+.DS_Store
+config-cache/*
+
+#eclipse
+.settings
+.project
+.classpath
+
 # Log file
 *.log
 

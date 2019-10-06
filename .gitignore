@@ -1,6 +1,12 @@
 # Compiled class file
 *.class
 
+testbin
+bin
+*.swp
+*.versionsBackup
+tmp
+
 #idea
 .idea
 *.iml

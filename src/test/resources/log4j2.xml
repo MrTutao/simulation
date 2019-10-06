@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="info"  packages="org.personal.simulation.log">
+    <Scripts>
+        <Script name="filter.gv" language="js">
+            java.lang.System.getProperty('log.console.close') == 'true'
+        </Script>
+    </Scripts>
+
+    <appenders>
+        <console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}][%p][%t][%c{1}]%m%n"/>
+        </console>
+
+        <RollingFile name="RollingFileInfo" fileName="target/applogs/simulation/simulationTest.log"
+                     filePattern="target/applogs/simulation/simulationTest-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}][%p][%t][%c{1}]%m%xpEx{filters(qunar.tc, org.junit,org.eclipse.jdt.internal,org.apache.maven.surefire,org.mockito,org.apache.catalina,org.springframework.web,com.dianping.cat)}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+            </Policies>
+        </RollingFile>
+
+    </appenders>
+
+    <loggers>
+        <!--过滤掉spring和hibernate的一些无用的debug信息-->
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.hibernate" level="INFO"/>
+        <logger name="io.netty" level="INFO"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="qunar" level="ERROR"/>
+        <logger name="com.ctrip.framework.foundation" level="DEBUG"/>
+        <!--
+        <logger name="com.ctrip.xpipe.netty.commands.DefaultNettyClient" level="DEBUG"/>
+		<logger name="io.netty.handler.logging.LoggingHandler" level="DEBUG"/>
+        -->
+
+        <root level="INFO">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="RollingFileInfo"/>
+        </root>
+    </loggers>
+
+</configuration >

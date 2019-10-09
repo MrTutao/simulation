@@ -8,12 +8,16 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.personal.simulation.cache.DefaultRedisStringCache;
 import org.personal.simulation.cache.RedisStringCache;
+import org.personal.simulation.concurrent.LocalThreadFactory;
 import org.personal.simulation.lifecycle.AbstractLifecycle;
 import org.personal.simulation.netty.NettyServer;
 import org.personal.simulation.netty.handler.RedisCommandInHandler;
 import org.personal.simulation.netty.handler.RedisCommandOutHandler;
 
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author taotaotu
@@ -33,7 +37,13 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
 
     private Map<String, Channel> clientConnects;
 
+    private ScheduledExecutorService scheduledExecutorService;
+
     private int timeout = Integer.valueOf(System.getProperty("nettyServerTimeout", "2000"));
+
+    private long period = Long.parseLong(System.getProperty("netty-server-schedule-period", "10"));
+
+    private static final long DEFAULT_INIT_TIME = 1000;
 
     public DefaultNettyServer(int port, EventLoopGroup boss, EventLoopGroup worker) {
         this.port = port;
@@ -74,17 +84,27 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
         cache = new DefaultRedisStringCache();
         cache.initialize();
         clientConnects = Maps.newConcurrentMap();
+        scheduledExecutorService = Executors.newScheduledThreadPool(1,
+                new LocalThreadFactory(false, "netty-server-schedule"));
     }
 
     @Override
     protected void doStart() throws Exception {
         cache.start();
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            for (Map.Entry<String, Channel> entry : clientConnects.entrySet()) {
+                if (!entry.getValue().isActive()) {
+                    clientConnects.remove(entry.getKey());
+                }
+            }
+        }, DEFAULT_INIT_TIME, period, TimeUnit.SECONDS);
         super.doStart();
     }
 
     @Override
     protected void doStop() throws Exception {
         cache.stop();
+        scheduledExecutorService.shutdown();
         super.doStop();
     }
 

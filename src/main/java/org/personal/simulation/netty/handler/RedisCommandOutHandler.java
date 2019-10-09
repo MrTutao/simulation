@@ -25,7 +25,6 @@ public class RedisCommandOutHandler extends ChannelOutboundHandlerAdapter implem
 
         ByteBuf buf = cxt.alloc().buffer(32);
         redisEncoder.encode(buf);
-        cxt.channel().writeAndFlush(buf, promise);
-        super.write(cxt, msg, promise);
+        cxt.writeAndFlush(buf, promise);
     }
 }

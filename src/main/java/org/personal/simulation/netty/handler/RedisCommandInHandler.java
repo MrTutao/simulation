@@ -54,4 +54,9 @@ public class RedisCommandInHandler extends ChannelInboundHandlerAdapter implemen
         removeCache.accept(remoteAddress.getHostString());
         super.channelInactive(ctx);
     }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        ctx.channel().write("ok");
+    }
 }

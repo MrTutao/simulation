@@ -1,6 +1,7 @@
 package org.personal.simulation.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 
 import java.util.List;
 
@@ -10,5 +11,5 @@ import java.util.List;
  */
 public interface RedisDecoder<T> {
 
-    List<T> decode(ByteBuf buf);
+    List<T> decode(Channel channel, ByteBuf buf);
 }

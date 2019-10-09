@@ -1,7 +1,9 @@
 package org.personal.simulation.netty;
 
 import org.personal.simulation.lifecycle.Lifecycle;
-import org.personal.simulation.model.RedisModel;
+import org.personal.simulation.entity.RedisInfo;
+
+import java.util.Map;
 
 /**
  * @author taotaotu
@@ -9,5 +11,11 @@ import org.personal.simulation.model.RedisModel;
  */
 public interface NettyServerManager extends Lifecycle {
 
-    NettyServer getOrCreateNettyServer(RedisModel redis) throws Exception ;
+    NettyServer getOrCreateNettyServer(RedisInfo redis) throws Exception ;
+
+    Map<RedisInfo, NettyServer> getAllNettyServer();
+
+    void deleteNettyServer(RedisInfo redis);
+
+    void updateNettyServer(RedisInfo redis);
 }

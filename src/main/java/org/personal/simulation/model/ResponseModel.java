@@ -15,11 +15,11 @@ public class ResponseModel {
     private String message;
 
     public static ResponseModel createSuccessMessage(String message) {
-        return new ResponseModel(SUCCESS, message);
+        return new ResponseModel(SUCCESS, message + " success");
     }
 
     public static ResponseModel createFailureMessage(String message) {
-        return new ResponseModel(FAILURE, message);
+        return new ResponseModel(FAILURE, message + " failure");
     }
 
     private ResponseModel(String state, String message) {

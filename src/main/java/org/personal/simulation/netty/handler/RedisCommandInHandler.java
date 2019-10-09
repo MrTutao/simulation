@@ -1,12 +1,17 @@
 package org.personal.simulation.netty.handler;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.personal.simulation.codec.RedisDecoder;
+import org.personal.simulation.codec.impl.DefaultRedisDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author taotaotu
@@ -16,21 +21,35 @@ public class RedisCommandInHandler extends ChannelInboundHandlerAdapter implemen
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private BiConsumer<String, String> consumer;
+    private BiConsumer<String, Channel> consumer;
 
-    public RedisCommandInHandler(BiConsumer<String, String> consumer) {
+    private RedisDecoder redisDecoder;
+
+    private Consumer<String> removeCache;
+
+    public RedisCommandInHandler(BiConsumer<String, Channel> consumer, Consumer<String> removeCache) {
         this.consumer = consumer;
+        this.removeCache = removeCache;
+        redisDecoder = new DefaultRedisDecoder();
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext cxt, Object msg) throws Exception {
-
-        super.channelRead(cxt, msg);
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        consumer.accept(remoteAddress.getHostString(), ctx.channel());
+        super.channelRead(ctx, msg);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         logger.info("[channelActive]channel is active, {}", ctx.name());
         super.channelActive(ctx);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        removeCache.accept(remoteAddress.getHostString());
+        super.channelInactive(ctx);
     }
 }

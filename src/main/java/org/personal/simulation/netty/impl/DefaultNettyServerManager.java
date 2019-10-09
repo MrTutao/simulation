@@ -4,11 +4,12 @@ import com.google.common.collect.Maps;
 import io.netty.channel.EventLoopGroup;
 import org.personal.simulation.lifecycle.AbstractLifecycle;
 import org.personal.simulation.lifecycle.impl.LifecycleHelper;
-import org.personal.simulation.model.RedisModel;
+import org.personal.simulation.entity.RedisInfo;
 import org.personal.simulation.netty.EventLoopGroupProducer;
 import org.personal.simulation.netty.NettyServer;
 import org.personal.simulation.netty.NettyServerManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -18,9 +19,11 @@ import java.util.Map;
  * @author taotaotu
  * Sep 28, 2019
  */
+
+@Component
 public class DefaultNettyServerManager extends AbstractLifecycle implements NettyServerManager {
 
-    private Map<RedisModel, NettyServer> serverMap;
+    private Map<RedisInfo, NettyServer> serverMap;
 
     private EventLoopGroup boss;
 
@@ -61,7 +64,7 @@ public class DefaultNettyServerManager extends AbstractLifecycle implements Nett
     protected void doDispose() throws Exception {
 
         super.doDispose();
-        for (Map.Entry<RedisModel, NettyServer> entry : serverMap.entrySet()) {
+        for (Map.Entry<RedisInfo, NettyServer> entry : serverMap.entrySet()) {
             entry.getValue().dispose();
         }
 
@@ -75,13 +78,13 @@ public class DefaultNettyServerManager extends AbstractLifecycle implements Nett
     protected void doStop() throws Exception {
         super.doStop();
 
-        for (Map.Entry<RedisModel, NettyServer> entry : serverMap.entrySet()) {
+        for (Map.Entry<RedisInfo, NettyServer> entry : serverMap.entrySet()) {
             entry.getValue().stop();
         }
     }
 
     @Override
-    public NettyServer getOrCreateNettyServer(RedisModel redis) throws Exception {
+    public NettyServer getOrCreateNettyServer(RedisInfo redis) throws Exception {
         if (redis == null) {
             throw new IllegalArgumentException("[getOrCreateNettyServer]argument is null");
         }
@@ -100,8 +103,36 @@ public class DefaultNettyServerManager extends AbstractLifecycle implements Nett
         return nettyServer;
     }
 
+    @Override
+    public Map<RedisInfo, NettyServer> getAllNettyServer() {
+        return Maps.newHashMap(serverMap);
+    }
+
+    @Override
+    public void deleteNettyServer(RedisInfo redis) {
+        NettyServer server = serverMap.get(redis);
+        if (server != null) {
+            try {
+                destroyNettyServer(server);
+            } catch (Exception e) {
+                logger.error("[delete]occur exception, {}", e);
+            }
+            serverMap.remove(redis);
+        }
+    }
+
+    @Override
+    public void updateNettyServer(RedisInfo redis) {
+
+    }
+
     private void initNettyServer(NettyServer server) throws Exception {
         LifecycleHelper.initializeIfPossible(server);
         LifecycleHelper.startIfPossible(server);
+    }
+
+    private void destroyNettyServer(NettyServer server) throws Exception {
+        LifecycleHelper.stopIfPossible(server);
+        LifecycleHelper.disposeIfPossible(server);
     }
 }

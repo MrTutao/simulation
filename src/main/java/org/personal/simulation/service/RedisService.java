@@ -1,8 +1,10 @@
 package org.personal.simulation.service;
 
-import org.personal.simulation.model.RedisModel;
+import io.netty.channel.Channel;
+import org.personal.simulation.entity.RedisInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author taotaotu
@@ -10,7 +12,13 @@ import java.util.List;
  */
 public interface RedisService {
 
-    List<RedisModel> getAllRedis();
+    List<RedisInfo> getAllRedis();
+
+    Map<RedisInfo, Map<String, Channel>> getClientConnects();
 
     boolean fakeRedis(int number);
+
+    boolean updateRedis(RedisInfo redisInfo);
+
+    boolean deleteRedis(RedisInfo redisInfo);
 }

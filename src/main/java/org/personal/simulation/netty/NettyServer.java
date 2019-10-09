@@ -1,6 +1,9 @@
 package org.personal.simulation.netty;
 
+import io.netty.channel.Channel;
 import org.personal.simulation.lifecycle.Lifecycle;
+
+import java.util.Map;
 
 /**
  * @author taotaotu
@@ -9,4 +12,6 @@ import org.personal.simulation.lifecycle.Lifecycle;
 public interface NettyServer extends Lifecycle {
 
     void open();
+
+    Map<String, Channel> allClientConnect();
 }

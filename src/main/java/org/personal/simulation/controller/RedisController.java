@@ -1,10 +1,8 @@
 package org.personal.simulation.controller;
 
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
-import org.personal.simulation.cache.ResourceCache;
-import org.personal.simulation.entity.RealRedis;
-import org.personal.simulation.model.RedisModel;
+import io.netty.channel.Channel;
+import org.personal.simulation.entity.RedisInfo;
+import org.personal.simulation.entity.RedisPostBody;
 import org.personal.simulation.model.ResponseModel;
 import org.personal.simulation.service.RedisService;
 import org.slf4j.Logger;
@@ -13,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * @author taotaotu
@@ -28,49 +28,50 @@ public class RedisController {
     @Autowired
     private RedisService redisService;
 
-    @Autowired
-    private ResourceCache resourceCache;
-
-
     @GetMapping("/all")
-    public List<RedisModel> getAllRedisPort() {
+    public List<RedisInfo> getAllRedisPort() {
         return redisService.getAllRedis();
     }
 
-    @PostMapping("/addRedis/{number}")
-    public ResponseModel addAllRedis(@PathVariable int number) {
+    @PostMapping("/add")
+    public ResponseModel addAllRedis(@RequestBody RedisPostBody postBody) {
+        logger.info("[add][redis]option name: {}", postBody.getName());
+        return delegateAction(() -> redisService.fakeRedis(postBody.getNumber()), "add redis");
+    }
+
+    @PutMapping("/update")
+    public ResponseModel update(@RequestBody RedisInfo redis) {
+        return delegateAction(() -> redisService.updateRedis(redis),
+                String.format("update redis, ip:%s, port%d", redis.getIp(), redis.getPort()));
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseModel delete(@RequestBody RedisInfo redis) {
+
+        return delegateAction(() -> redisService.deleteRedis(redis),
+                String.format("delete redis, ip:%s, port:%d", redis.getIp(), redis.getPort()));
+    }
+
+    @GetMapping("/allClient")
+    public Map<RedisInfo, Map<String, Channel>> getAllClientInfo() {
+        return redisService.getClientConnects();
+    }
+
+    private ResponseModel delegateAction(Supplier<Boolean> supplier, String message) {
         ResponseModel result;
+
         try {
-            if (redisService.fakeRedis(number)) {
-                result = ResponseModel.createSuccessMessage("add redis success");
+            if (supplier.get()) {
+                result = ResponseModel.createSuccessMessage(message);
             } else {
-                result = ResponseModel.createSuccessMessage("add redis failure");
+                result = ResponseModel.createFailureMessage(message);
             }
         } catch (Exception e) {
-            result = ResponseModel.createFailureMessage(e.getMessage());
-            logger.error("[fakeRedis]failure, {}", e);
+            result = ResponseModel.createFailureMessage(message);
+            logger.error("[redis]{} occur exception", message);
         }
 
         return result;
     }
 
-    @PostMapping("/addRealRedis")
-    public ResponseModel addRealRedis(@RequestBody RealRedis realRedis) {
-        return doCacheRealRedis(realRedis);
-    }
-
-    private ResponseModel doCacheRealRedis(RealRedis realRedis) {
-        ResponseModel result;
-        AttributeKey<RealRedis> attributeKey = AttributeKey.valueOf(String.format("%s:%d",
-                realRedis.getIp(), realRedis.getPort()));
-
-        Attribute<RealRedis> attribute = resourceCache.attr(attributeKey);
-        if (attribute.compareAndSet(null, realRedis)) {
-            result = ResponseModel.createSuccessMessage("cache real redis success");
-        } else {
-            result = ResponseModel.createFailureMessage("cache real redis failure");
-        }
-
-        return result;
-    }
 }

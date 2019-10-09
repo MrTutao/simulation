@@ -42,7 +42,9 @@ public class RedisCommandInHandler extends ChannelInboundHandlerAdapter implemen
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         logger.info("[channelActive]channel is active, {}", ctx.name());
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        consumer.accept(remoteAddress.getHostString(), ctx.channel());
+        String ipAndPort = String.format("%s:%d", remoteAddress.getHostString(),
+                remoteAddress.getPort());
+        consumer.accept(ipAndPort, ctx.channel());
         super.channelActive(ctx);
     }
 

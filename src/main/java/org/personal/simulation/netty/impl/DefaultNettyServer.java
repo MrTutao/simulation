@@ -29,8 +29,6 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
 
     private ServerBootstrap serverBootstrap;
 
-    private Channel channel;
-
     private RedisStringCache cache;
 
     private Map<String, Channel> clientConnects;
@@ -45,7 +43,22 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
 
     @Override
     public void open() {
-
+        serverBootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.SO_TIMEOUT, timeout).
+                childHandler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ChannelPipeline pipeline = ch.pipeline();
+                        pipeline.addLast(new RedisCommandInHandler((host, clientChannel) -> clientConnects.put(host, clientChannel),
+                                host -> clientConnects.remove(host))).
+                                addLast(new RedisCommandOutHandler());
+                    }
+                });
+        try {
+            serverBootstrap.bind(port).sync();
+        } catch (InterruptedException e) {
+            logger.error("[open][Service]exception: {}", e);
+        }
     }
 
     @Override
@@ -65,32 +78,20 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
 
     @Override
     protected void doStart() throws Exception {
-        super.doStart();
-        serverBootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
-                .childOption(ChannelOption.SO_TIMEOUT, timeout).
-                childHandler(new ChannelInitializer<NioSocketChannel>() {
-                    @Override
-                    protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new RedisCommandInHandler((host, clientChannel) -> clientConnects.put(host, clientChannel),
-                                host -> clientConnects.remove(host))).
-                                addLast(new RedisCommandOutHandler());
-                    }
-                });
-        ChannelFuture future = serverBootstrap.bind(port).sync();
-        channel = future.channel();
         cache.start();
+        super.doStart();
     }
 
     @Override
     protected void doStop() throws Exception {
-        super.doStop();
-        channel.close();
         cache.stop();
+        super.doStop();
     }
 
     @Override
     protected void doDispose() throws Exception {
         cache.dispose();
+        clientConnects.clear();
+        super.doDispose();
     }
 }

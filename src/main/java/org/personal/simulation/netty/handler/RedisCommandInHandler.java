@@ -35,14 +35,14 @@ public class RedisCommandInHandler extends ChannelInboundHandlerAdapter implemen
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        consumer.accept(remoteAddress.getHostString(), ctx.channel());
         super.channelRead(ctx, msg);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         logger.info("[channelActive]channel is active, {}", ctx.name());
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        consumer.accept(remoteAddress.getHostString(), ctx.channel());
         super.channelActive(ctx);
     }
 

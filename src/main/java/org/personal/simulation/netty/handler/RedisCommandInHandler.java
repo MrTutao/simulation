@@ -50,6 +50,7 @@ public class RedisCommandInHandler extends ChannelInboundHandlerAdapter implemen
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        logger.info("[inactive]channel is inactive, {}", ctx.channel());
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         removeCache.accept(remoteAddress.getHostString());
         super.channelInactive(ctx);

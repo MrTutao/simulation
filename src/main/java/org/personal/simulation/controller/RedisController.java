@@ -57,6 +57,16 @@ public class RedisController {
         return redisService.getClientConnects();
     }
 
+    @GetMapping("/allPorts")
+    public List<Integer> getAllRedisPorts() {
+        return redisService.getAllRedisPorts();
+    }
+
+    @DeleteMapping("/deleteAll")
+    public ResponseModel deleteAll() {
+        return delegateAction(() -> redisService.deleteAll(), "delete all redis");
+    }
+
     private ResponseModel delegateAction(Supplier<Boolean> supplier, String message) {
         ResponseModel result;
 

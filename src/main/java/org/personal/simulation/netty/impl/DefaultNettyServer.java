@@ -33,6 +33,8 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
 
     private Map<String, Channel> clientConnects;
 
+    private NioServerSocketChannel channel;
+
     private int timeout = Integer.valueOf(System.getProperty("nettyServerTimeout", "2000"));
 
     public DefaultNettyServer(int port, EventLoopGroup boss, EventLoopGroup worker) {
@@ -55,7 +57,7 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
                     }
                 });
         try {
-            serverBootstrap.bind(port).sync();
+            channel = (NioServerSocketChannel) serverBootstrap.bind(port).sync().channel();
         } catch (InterruptedException e) {
             logger.error("[open][Service]exception: {}", e);
         }
@@ -85,6 +87,7 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
     @Override
     protected void doStop() throws Exception {
         cache.stop();
+        channel.close();
         super.doStop();
     }
 

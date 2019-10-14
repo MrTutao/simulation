@@ -64,6 +64,11 @@ public class DefaultRedisService implements RedisService {
     }
 
     @Override
+    public List<Integer> getAllRedisPorts() {
+        return Lists.newLinkedList(redisCache.keySet());
+    }
+
+    @Override
     public Map<RedisInfo, Map<String, Channel>> getClientConnects() {
         Map<RedisInfo, Map<String, Channel>> result = Maps.newHashMap();
 
@@ -72,6 +77,13 @@ public class DefaultRedisService implements RedisService {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean deleteAll() {
+        redisCache.values().forEach(redisInfo -> serverManager.deleteNettyServer(redisInfo));
+        redisCache.clear();
+        return true;
     }
 
     @Override

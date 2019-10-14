@@ -14,7 +14,11 @@ public interface RedisService {
 
     List<RedisInfo> getAllRedis();
 
+    List<Integer> getAllRedisPorts();
+
     Map<RedisInfo, Map<String, Channel>> getClientConnects();
+
+    boolean deleteAll();
 
     boolean fakeRedis(int number);
 

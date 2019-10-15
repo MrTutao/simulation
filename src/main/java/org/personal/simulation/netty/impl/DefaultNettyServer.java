@@ -6,10 +6,13 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import org.personal.simulation.cache.DefaultRedisStringCache;
 import org.personal.simulation.cache.RedisStringCache;
 import org.personal.simulation.lifecycle.AbstractLifecycle;
 import org.personal.simulation.netty.NettyServer;
+import org.personal.simulation.netty.handler.ProcessExceptionHandler;
 import org.personal.simulation.netty.handler.RedisCommandInHandler;
 import org.personal.simulation.netty.handler.RedisCommandOutHandler;
 
@@ -51,9 +54,11 @@ public class DefaultNettyServer extends AbstractLifecycle implements NettyServer
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast(new RedisCommandInHandler((host, clientChannel) -> clientConnects.put(host, clientChannel),
-                                host -> clientConnects.remove(host))).
-                                addLast(new RedisCommandOutHandler());
+                        pipeline.addLast(new LoggingHandler(LogLevel.DEBUG))
+                                .addLast(new RedisCommandInHandler((host, clientChannel) -> clientConnects.put(host, clientChannel),
+                                host -> clientConnects.remove(host)))
+                                .addLast(new ProcessExceptionHandler())
+                                .addLast(new RedisCommandOutHandler());
                     }
                 });
         try {

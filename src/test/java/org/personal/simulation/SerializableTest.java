@@ -28,5 +28,9 @@ public class SerializableTest {
 
         generator.close();
         logger.info("redis: {}", writer.toString());
+
+        RedisInfo deserializableInstance = mapper.readValue(writer.toString(), RedisInfo.class);
+
+        logger.info("de serializable instance: {}", deserializableInstance);
     }
 }
